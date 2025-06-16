@@ -1,10 +1,13 @@
 import pytest
-
+from django.contrib.auth import get_user_model
 # Импортируем класс клиента.
 from django.test.client import Client
-
+from django.urls import reverse
 # Импортируем модель заметки, чтобы создать экземпляр.
 from news.models import Comment, News
+
+
+User = get_user_model()
 
 
 @pytest.fixture
@@ -57,3 +60,12 @@ def news_id(news):
 @pytest.fixture
 def comment_id(comment):
     return (comment.id, )
+
+@pytest.fixture
+def form_data():
+    return {'text': 'Новый текст комментария'}
+
+@pytest.fixture
+def url_to_comments(news):
+    news_url = reverse('news:detail', args=(news.id,))
+    return news_url + '#comments'
