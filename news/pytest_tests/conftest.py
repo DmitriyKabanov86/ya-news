@@ -1,7 +1,11 @@
 import pytest
+from datetime import datetime, timedelta
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 # Импортируем класс клиента.
 from django.test.client import Client
+from django.utils import timezone
 from django.urls import reverse
 # Импортируем модель заметки, чтобы создать экземпляр.
 from news.models import Comment, News
@@ -69,3 +73,29 @@ def form_data():
 def url_to_comments(news):
     news_url = reverse('news:detail', args=(news.id,))
     return news_url + '#comments'
+
+@pytest.fixture
+def create_news(news):
+    today = datetime.today()
+    all_news = [
+        News(
+            title=f'Новость {index}',
+            text='Просто текст.',
+            # Для каждой новости уменьшаем дату на index дней от today,
+            # где index - счётчик цикла.
+            date=today - timedelta(days=index)
+        )
+        for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
+    ]
+    News.objects.bulk_create(all_news)
+
+
+@pytest.fixture
+def create_comments(news, author):
+    now = timezone.now()
+    for index in range(10):
+        comment = Comment.objects.create(
+            news=news, author=author, text=f'Tекст {index}',
+        )
+        comment.created = now + timedelta(days=index)
+        comment.save()
